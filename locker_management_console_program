@@ -1,0 +1,269 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_LOCKERS 100 // 최대 사물함 개수를 정의하는 매크로
+#define MAX_USERS 100 // 최대 사용자 수를 정의하는 매크로
+#define MAX_PASSWORD_LENGTH 20 // 비밀번호 최대 길이를 정의하는 매크로
+
+// 사용자 구조체 정의
+typedef struct {
+    char username[MAX_PASSWORD_LENGTH]; // 사용자 이름을 저장하는 문자열 배열
+    char password[MAX_PASSWORD_LENGTH]; // 비밀번호를 저장하는 문자열 배열
+} User;
+
+// 사물함 구조체 정의
+typedef struct {
+    int number; // 사물함 번호를 저장하는 정수 변수
+    int userIndex; // 해당 사물함을 사용하는 사용자의 인덱스를 저장하는 정수 변수
+    char item[50]; // 보관 물품을 저장하는 문자열 배열
+} Locker;
+
+// 전역 변수로 사물함과 사용자를 관리하는 배열 선언
+Locker lockers[MAX_LOCKERS]; // 사물함을 저장하는 배열
+User users[MAX_USERS]; // 사용자를 저장하는 배열
+int numLockers = 0; // 현재 등록된 사물함 개수를 저장하는 변수
+int numUsers = 0; // 현재 등록된 사용자 수를 저장하는 변수
+
+// 함수 선언
+void title();
+void registerLocker();
+void registerUser();
+void assignUser();
+void setPassword();
+void manageLocker();
+void storeItem();
+void retrieveItem();
+void saveData();
+void loadData();
+void displayLockers();
+
+int main() {
+    title(); // 프로그램 제목 출력 함수 호출
+    int choice;
+
+    // 데이터 로드
+    loadData(); // 파일에서 데이터를 불러오는 함수 호출
+
+    // 메뉴 표시
+    while (1) {
+        printf("\n사물함 관리 프로그램\n");
+        printf("1. 사물함 등록\n");
+        printf("2. 사용자 등록\n");
+        printf("3. 사물함에 사용자 할당\n");
+        printf("4. 비밀번호 설정\n");
+        printf("5. 사물 보관\n");
+        printf("6. 사물 꺼내기\n");
+        printf("7. 종료\n");
+        printf("메뉴를 선택하세요: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1: registerLocker(); break;
+            case 2: registerUser(); break;
+            case 3: assignUser(); break;
+            case 4: setPassword(); break;
+            case 5: storeItem(); break;
+            case 6: retrieveItem(); break;
+            case 7:
+                saveData(); // 값을 저장하며 종료
+                printf("프로그램을 종료합니다.\n");
+                return 0;
+            default:
+                printf("잘못된 입력입니다. 다시 시도하세요.\n");
+                break;
+        }
+    }
+}
+
+// 프로그램 제목 출력 함수
+void title() {
+    printf("사물함 관리 프로그램\n");
+}
+
+// 사물함 등록 함수
+void registerLocker() {
+    if (numLockers >= MAX_LOCKERS) {
+        printf("더 이상 사물함을 추가할 수 없습니다.\n");
+        return;
+    }
+    printf("사물함 번호를 입력하세요: ");
+    scanf("%d", &lockers[numLockers].number);
+    lockers[numLockers].userIndex = -1; // 새로운 사물함을 등록할 때 사용자가 아직 할당되지 않았음을 나타냄
+    numLockers++; // 등록된 사물함 개수 증가
+    printf("사물함이 등록되었습니다.\n");
+    displayLockers(); // 사물함 상태 출력
+}
+
+// 사용자 등록 함수
+void registerUser() {
+    if (numUsers >= MAX_USERS) {
+        printf("더 이상 사용자를 추가할 수 없습니다.\n");
+        return;
+    }
+    printf("사용자 이름을 입력하세요: ");
+    scanf("%s", users[numUsers].username); // User 안에 있는 username 이름을 저장
+    numUsers++; // 등록된 사용자 수 증가
+    printf("사용자가 등록되었습니다.\n");
+    displayLockers(); // 사물함 상태 출력
+}
+
+// 사물함에 사용자 할당 함수
+void assignUser() {
+    int lockerNumber; // 할당할 사물함 번호를 저장하는 변수
+    char username[MAX_PASSWORD_LENGTH]; // 할당할 사용자 이름을 저장하는 문자열 배열
+    int userIndex = -1; // 사용자 인덱스를 저장하는 변수. 초기값은 -1로 설정하여 사용자를 찾지 못한 상태를 나타냄
+
+    printf("할당할 사물함 번호를 입력하세요: ");
+    scanf("%d", &lockerNumber);
+    printf("할당할 사용자 이름을 입력하세요: ");
+    scanf("%s", username);
+
+    // 사용자 이름과 일치하는 사용자를 찾아서 해당 인덱스를 할당
+    for (int i = 0; i < numUsers; i++) {
+        if (strcmp(username, users[i].username) == 0) {
+            userIndex = i;
+            break;
+        }
+    }
+
+    if (userIndex == -1) { // 사용자를 찾지 못한 경우
+        printf("일치하는 사용자를 찾을 수 없습니다.\n");
+        return;
+    }
+
+    if (lockerNumber < 1 || lockerNumber > MAX_LOCKERS) { // 입력된 사물함 번호가 유효하지 않은 경우
+        printf("잘못된 사물함 번호입니다.\n");
+        return;
+    }
+
+    lockers[lockerNumber - 1].userIndex = userIndex; // 해당 사물함에 사용자 인덱스를 할당
+    printf("해당 사물함에 사용자가 할당되었습니다.\n");
+    displayLockers(); // 사물함 상태 출력
+}
+
+// 비밀번호 설정 함수
+void setPassword() {
+    int userIndex; // 사용자의 인덱스를 저장하는 변수
+    char username[MAX_PASSWORD_LENGTH]; // 비밀번호를 변경할 사용자의 이름을 저장하는 배열
+    char newPassword[MAX_PASSWORD_LENGTH]; // 새로운 비밀번호를 저장하는 배열
+
+    printf("비밀번호를 설정할 사용자 이름을 입력하세요: ");
+    scanf("%s", username);
+
+    // 사용자 이름과 일치하는 사용자를 찾아서 해당 인덱스를 할당
+    for (int i = 0; i < numUsers; i++) {
+        if (strcmp(username, users[i].username) == 0) {
+            userIndex = i;
+            break;
+        }
+    }
+
+    if (userIndex == -1) { // 사용자를 찾지 못한 경우
+        printf("일치하는 사용자를 찾을 수 없습니다.\n");
+        return;
+    }
+
+    printf("새로운 비밀번호를 입력하세요: ");
+    scanf("%s", newPassword);
+    strcpy(users[userIndex].password, newPassword); // 해당 사용자의 비밀번호를 새로운 비밀번호로 변경
+    printf("비밀번호가 변경되었습니다.\n");
+    displayLockers(); // 사물함 상태 출력
+}
+
+// 물품을 사물함에 보관하는 함수
+void storeItem() {
+    int lockerNumber; // 보관할 사물함의 번호를 저장하는 변수
+
+    printf("사물을 보관할 사물함 번호를 입력하세요: ");
+    scanf("%d", &lockerNumber);
+
+    if (lockerNumber < 1 || lockerNumber > MAX_LOCKERS) { // 입력된 사물함 번호가 올바른 범위를 벗어난 경우
+        printf("잘못된 사물함 번호입니다.\n");
+        return;
+    }
+
+    printf("보관할 물품을 입력하세요: ");
+    scanf("%s", lockers[lockerNumber - 1].item); // 사용자로부터 물품을 입력받아 해당 사물함에 저장
+    printf("물품이 사물함에 보관되었습니다.\n");
+    displayLockers(); // 사물함 상태 출력
+}
+
+// 사물함에서 물품을 꺼내는 함수
+void retrieveItem() {
+    int lockerNumber; // 꺼낼 물품이 있는 사물함의 번호를 저장하는 변수
+
+    printf("물품을 꺼낼 사물함 번호를 입력하세요: ");
+    scanf("%d", &lockerNumber);
+
+    if (lockerNumber < 1 || lockerNumber > MAX_LOCKERS) { // 입력된 사물함 번호가 올바른 범위를 벗어난 경우
+        printf("잘못된 사물함 번호입니다.\n");
+        return;
+    }
+
+    printf("사물함에서 꺼낸 물품: %s\n", lockers[lockerNumber - 1].item); // 해당 사물함에 보관된 물품을 출력
+    strcpy(lockers[lockerNumber - 1].item, ""); // 물품을 꺼내면 해당 사물함의 물품을 초기화
+    displayLockers(); // 사물함 상태 출력
+}
+
+// 데이터를 파일에 저장하는 함수
+void saveData() {
+    FILE* fp = fopen("lockers.txt", "w"); // 파일을 쓰기 모드로 엽니다. 만약 파일이 없으면 새로 생성됨
+    if (fp == NULL) { // 파일이 성공적으로 열리지 않았을 때를 검사하는 조건문
+        printf("파일을 열 수 없습니다.\n");
+        return;
+    }
+
+    // 사물함 데이터 저장
+    fprintf(fp, "%d\n", numLockers); // 사물함의 개수를 파일에 저장
+    for (int i = 0; i < numLockers; i++) {
+        fprintf(fp, "%d %d %s\n", lockers[i].number, lockers[i].userIndex, lockers[i].item); // 사물함 번호, 사용자 인덱스, 보관 물품을 파일에 저장
+    }
+
+    // 파일에 사용자의 개수를 저장
+    fprintf(fp, "%d\n", numUsers); // 사용자의 개수를 파일에 저장
+    for (int i = 0; i < numUsers; i++) {
+        fprintf(fp, "%s %s\n", users[i].username, users[i].password); // 사용자 이름과 비밀번호를 파일에 저장
+    }
+
+    fclose(fp); // 파일을 닫음
+    printf("데이터가 저장되었습니다.\n");
+}
+
+// 파일로부터 데이터를 읽어오는 함수
+void loadData() {
+    FILE* fp = fopen("lockers.txt", "r"); // 파일을 읽기 모드로 열고
+    if (fp == NULL) { // 파일이 성공적으로 열리지 않았을 때
+        printf("파일을 열 수 없습니다.\n");
+        return;
+    }
+
+    // 사물함 데이터 로드
+    fscanf(fp, "%d\n", &numLockers); // 사물함의 개수를 읽어와서 numLockers 변수에 저장
+    for (int i = 0; i < numLockers; i++) {
+        fscanf(fp, "%d %d %s\n", &lockers[i].number, &lockers[i].userIndex, lockers[i].item); // 각 사물함의 번호, 사용자 인덱스, 보관 물품을 읽어와서 lockers 배열에 저장
+    }
+
+    // 사용자 데이터 로드
+    fscanf(fp, "%d\n", &numUsers); // 사용자의 개수를 읽어와서 numUsers 변수에 저장
+    for (int i = 0; i < numUsers; i++) {
+        fscanf(fp, "%s %s\n", users[i].username, users[i].password); // 각 사용자의 이름과 비밀번호를 읽어와서 users 배열에 저장
+    }
+
+    fclose(fp); // 파일을 닫음
+    printf("데이터가 로드되었습니다.\n");
+}
+
+// 현재 사물함의 상태를 출력하는 함수
+void displayLockers() {
+    printf("\n사물함 상태\n");
+    for (int i = 0; i < numLockers; i++) {
+        printf("사물함 %d: ", lockers[i].number); // 현재 저장되어 있는 사물함의 번호를 출력
+        if (lockers[i].userIndex == -1) { // 사용자가 할당되지 않았다면 "비어 있음"이라고 출력
+            printf("비어 있음\n");
+        } else { // 해당 사물함에 할당된 사용자의 이름과 보관된 물품을 출력
+            printf("사용자: %s, 보관 물품: %s\n", users[lockers[i].userIndex].username, lockers[i].item);
+        }
+    }
+}

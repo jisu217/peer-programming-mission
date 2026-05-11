@@ -1,0 +1,44 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+
+int main() {
+    int num; // 숫자의 개수를 입력받기 위한 변수
+    int arr[2001]; // 숫자들을 넣기 위한 배열
+    int i, j; // for문 돌리기 위한 변수
+    int good = 0; // 좋은 수를 세기 위한 변수
+    int change; // 버블 정렬을 이용하여 숫자들을 오름차순으로 정리하기 위한 변수
+
+    // 숫자의 개수 입력
+    scanf("%d", &num);
+
+    // 배열에 숫자 넣기
+    for (i = 0; i < num; i++) {
+        scanf("%d", &arr[i]);
+    }
+
+    // 버블 정렬을 이용하여 오름차순으로 정렬
+    for (i = 0; i < num - 1; i++) {
+        for (j = 0; j < num - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                // 두 요소를 교환
+                change = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = change;
+            }
+        }
+    }
+
+    // 좋은 수 계산
+    for (i = 0; i < num - 1; i++) {
+        for (j = i + 1; j < num; j++) {
+            if (arr[j] == arr[i] + arr[j - i - 1]) {
+                good++;
+            }
+        }
+    }
+
+    // 결과 출력
+    printf("%d\n", good);
+
+    return 0;
+}
