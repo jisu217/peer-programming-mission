@@ -1,8 +1,4 @@
-<img src="https://img.shields.io/badge/C-A8B9CC?style=for-the-badge&logo=c&logoColor=white" />
-
 > 프로그래밍 미션
-
----
 
 1. Team Members
 
@@ -14,5 +10,3 @@
 | Mentee | 송준서 | 
 | Mentee | 김예인 | 
 | Mentee || 
-
----
