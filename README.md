@@ -1,5 +1,3 @@
-> 프로그래밍 미션
-
 1. Team Members
 
 | Role | Name | 
